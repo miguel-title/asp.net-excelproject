@@ -11,6 +11,7 @@ namespace AtomicSeller.Controllers
         // GET: LabelPrinting
         public ActionResult Index()
         {
+            ViewBag.WCPPDetectionScript = Neodynamic.SDK.Web.WebClientPrint.CreateWcppDetectionScript(Url.Action("ProcessRequest", "WebClientPrintAPI", null, HttpContext.Request.Url.Scheme), HttpContext.Session.SessionID);
             return View();
         }
     }
