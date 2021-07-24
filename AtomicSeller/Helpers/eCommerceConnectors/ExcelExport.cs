@@ -24,9 +24,52 @@ namespace AtomicSeller
 {
     class ExcelExport
     {
+        public List<DeliveryDM> SortDeliveries(List<DeliveryDM> _Deliveries, List<DeliveryProductDM> _Products)
+        {
+            List<string> _result = new List<string>();
 
+            //Set NbOrderLines to Deliveries.
+            foreach (DeliveryDM _delivery in _Deliveries)
+            {
+                int deliveryID = _delivery.DeliveryID;
+
+                int nCount = 0;
+                foreach (DeliveryProductDM _deliveryproduct in _Products)
+                {
+                    if (_deliveryproduct.DeliveryID == deliveryID)
+                    {
+                        nCount++;
+                        // Added Patrice 20210724
+                        if (string.IsNullOrEmpty(_delivery.LowestProductLocation))
+                            _delivery.LowestProductLocation = _deliveryproduct.Location;
+                        else
+                        {
+                            if (string.Compare (_delivery.LowestProductLocation, _deliveryproduct.Location)<0)
+                                _delivery.LowestProductLocation = _deliveryproduct.Location;
+                        }
+                    }
+                }
+
+                _delivery.NbOrderLines = nCount;
+
+            }
+
+            _Deliveries = _Deliveries.OrderBy(m => m.NbOrderLines).ThenByDescending(m => m.LowestProductLocation).ToList();
+
+            return (_Deliveries);
+            /*
+            foreach (DeliveryDM _delivery in _Deliveries)
+            {
+                _result.Add(_delivery.LabelPath);
+            }
+
+            return _result;
+            */
+        }
         public string ExportToExcelFile(List<DeliveryDM> _Deliveries, List<DeliveryProductDM> _Products)
         {
+            _Deliveries = SortDeliveries(_Deliveries, _Products);
+
             List<ExcelDM> _data = MakeExcelData(_Deliveries, _Products);
             DataTable _DataTable = ConvertListToDataTable(_data);
             
@@ -69,10 +112,32 @@ namespace AtomicSeller
         {
             List<ExcelDM> _result = new List<ExcelDM>();
 
+            //Set NbOrderLines to Deliveries.
+            /*
+            foreach (DeliveryDM _delivery in _Deliveries)
+            {
+                int deliveryID = _delivery.DeliveryID;
+
+                int nCount = 0;
+                foreach (DeliveryProductDM _deliveryproduct in _Products)
+                {
+                    if (_deliveryproduct.DeliveryID == deliveryID)
+                    {
+                        nCount++;
+                    }
+                }
+
+                _delivery.NbOrderLines = nCount;
+
+            }
+
+            _Deliveries = _Deliveries.OrderBy(m => m.NbOrderLines).ToList();
+            */
             foreach (DeliveryDM _delivery in _Deliveries)
             {
                 bool isProductExist = false;
                 int deliveryID = _delivery.DeliveryID;
+                List<ExcelDM> _tmpresult = new List<ExcelDM>();
                 foreach (DeliveryProductDM _deliveryproduct in _Products)
                 {
                     ExcelDM _exceldata = new ExcelDM();
@@ -80,7 +145,6 @@ namespace AtomicSeller
                     _exceldata.CustomerName = _delivery.RecipLastName;
                     _exceldata.OrderKey = _delivery.OrderKey;
                     _exceldata.DeliveryCity = _delivery.RecipCity;
-
                     if (_deliveryproduct.DeliveryID == deliveryID)
                     {
                         _exceldata.ProductsName = _deliveryproduct.ProductName;
@@ -89,9 +153,10 @@ namespace AtomicSeller
                         _exceldata.Location = _deliveryproduct.Location;
 
                         isProductExist = true;
-                        _result.Add(_exceldata);
+                        _tmpresult.Add(_exceldata);
                     }
                 }
+
 
                 if (!isProductExist)
                 {
@@ -100,7 +165,14 @@ namespace AtomicSeller
                     _exceldata.CustomerName = _delivery.RecipLastName;
                     _exceldata.OrderKey = _delivery.OrderKey;
                     _exceldata.DeliveryCity = _delivery.RecipCity;
-                    _result.Add(_exceldata);
+                    _tmpresult.Add(_exceldata);
+                }
+
+                _tmpresult = _tmpresult.OrderBy(m => m.Location).ToList();
+
+                foreach (ExcelDM result in _tmpresult)
+                {
+                    _result.Add(result);
                 }
 
             }

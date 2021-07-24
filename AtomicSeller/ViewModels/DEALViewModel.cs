@@ -125,6 +125,8 @@ namespace AtomicSeller.ViewModels
     {
         public int DeliveryID { get; set; }
         public Nullable<int> ShippingService { get; set; }
+        public int NbOrderLines { get;set; }
+        public string LowestProductLocation { get; set; }
         public System.DateTime ShippingDate { get; set; }
         public string ShippingPoint { get; set; }
         public string TrackingNumber { get; set; }
